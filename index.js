@@ -1,30 +1,31 @@
 const fs = require('fs')
-
+const morgan =require('morgan')
 const express = require('express')
-// const { json } = require('express/lib/response')
-// const { fail } = require('assert')
 const app = express()
 const port = 3000
 
-
+// 1) tiny
+app.use(morgan('dev'))
 app.use(express.json())  // middleware stand between the request and  the respons
+// this is a middle ware
+app.use((req, res, next) => {
+    console.log(' this midiware has show ');
+    next()
+})
+
+
+app.use((req, res, next) => {
+    // console.log(' this midiware has show ');
+    req.requestTime = new Date().toString();
+    next()
+})
 
 const tours =JSON.parse(fs.readFileSync(`${__dirname}/dev-data/data/tours-simple.json`))
 
-// log
 
-
-// app.get('/', (req, res) => {
-//      console.log('sam');
-//      res.status(200).json({
-//         status: "success",
-//         data: {
-//             tour:tour
-//         }
-//      })
-// })
-
-app.get('/api/v1/tours', (req, res) => {
+// 2) route handler
+const GetAllTours =  (req, res) => {
+    console.log(req.requestTime);
 
     res.status(200).json({
         status: "success",
@@ -34,9 +35,8 @@ app.get('/api/v1/tours', (req, res) => {
         }
      })
      
-})
-
-app.get('/api/v1/tours/:id', (req, res) => {
+}
+const Gettour =  (req, res) => {
     console.log(req.params);
     const id = req.params.id * 1
     console.log(id);
@@ -59,9 +59,8 @@ app.get('/api/v1/tours/:id', (req, res) => {
         }
      })
      
-})
-
-app.post('/api/v1/tours', (req, res) => {
+}
+const CreateTour =(req, res) => {
     // for post to work we need to inclusde a middlware
     console.log(req.body);
     const newId = tours[tours.length -1 ].id + 1;
@@ -86,10 +85,8 @@ app.post('/api/v1/tours', (req, res) => {
 
     // res.send('done')
      
-})
-
-
-app.patch('/api/v1/tours/:id', (req, res) => {
+}
+const Updatetour =  (req, res) => {
     console.log('sam');
     if( req.params.id *1 > tours.length){
         return res.status(404).json({
@@ -104,11 +101,8 @@ app.patch('/api/v1/tours/:id', (req, res) => {
         }
     })
 
-})
-
-
-
-app.delete('/api/v1/tours/:id', (req, res) => {
+}
+const RemoveTour =  (req, res) => {
     console.log('sam');
     if( req.params.id *1 > tours.length){
         return res.status(404).json({
@@ -118,16 +112,69 @@ app.delete('/api/v1/tours/:id', (req, res) => {
     }
     res.status(204).json({
         status:'success',
-        data:{
-            tour: '<Deleted tour here >'
-        }
+        data:null
     })
 
-})
+}
+
+// app.get('/api/v1/tours',GetAllTours)
+// app.get('/api/v1/tours/:id',Gettour)
+// app.post('/api/v1/tours', CreateTour)
+// app.patch('/api/v1/tours/:id',Updatetour)
+// app.delete('/api/v1/tours/:id',RemoveTour)
+const GetAllUser = (req, res) => {
+    res.status(500).json({
+        status: 'error',
+        message: 'this is not yet done'
+    })
+}
+const CreateUser = (req, res) => {
+    res.status(500).json({
+        status: 'error',
+        message: 'this is not yet done create'
+    })
+}
+const GetUser = (req, res) => {
+    res.status(500).json({
+        status: 'error',
+        message: 'this is not yet done get one'
+    })
+}
+const UpdateUser = (req, res) => {
+    res.status(500).json({
+        status: 'error',
+        message: 'this is not yet done update '
+    })
+}
+const RemoveUser =(req, res) => {
+    res.status(500).json({
+        status: 'error',
+        message: 'this is not yet done removergit'
+    })
+}
 
 
+//  we want to break things into routeconst
 
+const tourRouter = express.Router();
+const userRouter = express.Router();
 
+tourRouter.route('/').get(GetAllTours).post(CreateTour)
+userRouter.route('/').get(GetAllUser).post(CreateUser)
+
+// this is a middleware
+// app.use((req, res, next) => {
+//     console.log(' this midiware has second');
+//     next()
+// }) 
+// // this is a middleware
+tourRouter.route('/:id').get(Gettour).patch(Updatetour).delete(RemoveTour)
+userRouter.route('/:id').get(GetUser).patch(UpdateUser).delete(RemoveUser)
+
+app.use('/api/v1/tours', tourRouter)
+app.use('/api/v1/users', userRouter)
+
+//4 restart server.
 
 app.listen(port, () => {
   console.log(`Example app listening at http://localhost:${port}`)
